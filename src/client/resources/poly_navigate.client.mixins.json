@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "me.ajh123.poly_navigate.client.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "compat.XaeroFullscreenMapAccessor",
+    "compat.XaeroFullscreenMapMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

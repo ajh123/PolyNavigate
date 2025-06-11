@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "id": "poly_navigate",
+  "version": "${version}",
+  "name": "Poly Navigate",
+  "description": " ---\n Copyright (c) 2025 ajh123\n\nThis program is free software: you can redistribute it and/or modify\nit under the terms of the GNU General Public License as published by\nthe Free Software Foundation, either version 3 of the License, or\n(at your option) any later version.\n\nThis program is distributed in the hope that it will be useful,\nbut WITHOUT ANY WARRANTY; without even the implied warranty of\nMERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\nGNU General Public License for more details.\n\nYou should have received a copy of the GNU General Public License\nalong with this program.  If not, see <http://www.gnu.org/licenses/>\n\n",
+  "authors": [],
+  "contact": {},
+  "license": "GPL-3.0",
+  "icon": "assets/poly_navigate/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "fabric-datagen": [
+      "me.ajh123.poly_navigate.client.PolyNavigateDataGenerator"
+    ],
+    "client": [
+      "me.ajh123.poly_navigate.client.PolyNavigateClient"
+    ],
+    "main": [
+      "me.ajh123.poly_navigate.PolyNavigate"
+    ]
+  },
+  "mixins": [
+    "poly_navigate.mixins.json",
+    {
+      "config": "poly_navigate.client.mixins.json",
+      "environment": "client"
+    }
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric": "*",
+    "minecraft": "${minecraft_version}"
+  }
+}
