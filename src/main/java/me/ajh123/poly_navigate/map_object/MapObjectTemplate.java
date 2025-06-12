@@ -9,13 +9,13 @@ import java.util.Map;
 import java.util.Objects;
 
 public record MapObjectTemplate(
-    String type,
+    MapObjectType type,
     List<Identifier> tags,
     List<Identifier> optionalTags
 ) {
     public static final Codec<MapObjectTemplate> CODEC = RecordCodecBuilder.create(instance ->
         instance.group(
-            Codec.STRING.fieldOf("type").forGetter(MapObjectTemplate::type),
+            MapObjectType.CODEC.fieldOf("type").forGetter(MapObjectTemplate::type),
             Codec.list(Identifier.CODEC).fieldOf("tags").forGetter(MapObjectTemplate::tags),
             Codec.list(Identifier.CODEC).optionalFieldOf("optional_tags", List.of()).forGetter(MapObjectTemplate::optionalTags)
         ).apply(instance, MapObjectTemplate::new)
