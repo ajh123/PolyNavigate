@@ -1,6 +1,7 @@
 package me.ajh123.poly_navigate;
 
 import me.ajh123.poly_navigate.commands.CommandRegistry;
+import me.ajh123.poly_navigate.map_object.GraphManager;
 import me.ajh123.poly_navigate.map_object.MapDataRegistry;
 import net.fabricmc.api.ModInitializer;
 import java.util.logging.Logger;
@@ -17,6 +18,10 @@ public class PolyNavigate implements ModInitializer {
         // Initialize the template registry
         MapDataRegistry.onInitialize();
 
+        // Initialize the graph manager
+        GraphManager.onInitialize();
+
+        // Register commands
         CommandRegistry.registerCommands();
 
         // Log successful initialization

@@ -1,8 +1,8 @@
 package me.ajh123.poly_navigate.commands;
 
 import me.ajh123.poly_navigate.PolyNavigate;
-import me.ajh123.poly_navigate.commands.template.ApplyTemplateCommand;
-import me.ajh123.poly_navigate.commands.template.TemplateSpecArgumentType;
+import me.ajh123.poly_navigate.commands.template.NodeTemplateArgumentType;
+import me.ajh123.poly_navigate.commands.template.WayTemplateArgumentType;
 import net.fabricmc.fabric.api.command.v2.ArgumentTypeRegistry;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.command.argument.serialize.ConstantArgumentSerializer;
@@ -16,7 +16,8 @@ public class CommandRegistry {
             new ListTemplateCommand(),
             new ListTagCommand(),
             new TestCommand(),
-            new ApplyTemplateCommand()
+            new NodeCommand(),
+            new WayCommand()
     );
 
     public static void registerCommands() {
@@ -31,9 +32,15 @@ public class CommandRegistry {
         });
 
         ArgumentTypeRegistry.registerArgumentType(
-                Identifier.of(PolyNavigate.MODID, "template_spec"),
-                TemplateSpecArgumentType.class,
-                ConstantArgumentSerializer.of(TemplateSpecArgumentType::new)
+                Identifier.of(PolyNavigate.MODID, "template_spec_node"),
+                NodeTemplateArgumentType.class,
+                ConstantArgumentSerializer.of(NodeTemplateArgumentType::new)
+        );
+
+        ArgumentTypeRegistry.registerArgumentType(
+                Identifier.of(PolyNavigate.MODID, "template_spec_way"),
+                WayTemplateArgumentType.class,
+                ConstantArgumentSerializer.of(WayTemplateArgumentType::new)
         );
     }
 }

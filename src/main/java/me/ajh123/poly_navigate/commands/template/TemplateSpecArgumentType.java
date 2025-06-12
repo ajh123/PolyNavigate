@@ -8,6 +8,7 @@ import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import me.ajh123.poly_navigate.map_object.MapDataRegistry;
 import me.ajh123.poly_navigate.map_object.MapObjectTemplate;
+import me.ajh123.poly_navigate.map_object.MapObjectType;
 import me.ajh123.poly_navigate.map_object.TagDefinition;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
@@ -25,15 +26,17 @@ public class TemplateSpecArgumentType implements ArgumentType<TemplateSpec> {
     private static final DynamicCommandExceptionType BAD_VALUE =
             new DynamicCommandExceptionType(msg -> Text.literal("Invalid value: " + msg));
 
-    public static TemplateSpecArgumentType spec() {
-        return new TemplateSpecArgumentType();
+    private final MapObjectType type;
+
+    protected TemplateSpecArgumentType(MapObjectType type) {
+        this.type = type;
     }
 
     @Override
     public TemplateSpec parse(StringReader reader) throws CommandSyntaxException {
         // 1) parse template ID
         Identifier tmplId = Identifier.fromCommandInput(reader);
-        Map<Identifier, MapObjectTemplate> all = MapDataRegistry.getMapObjectTemplates();
+        Map<Identifier, MapObjectTemplate> all = (type == MapObjectType.NODE) ?  MapDataRegistry.getNodeTemplates() : MapDataRegistry.getWayTemplates();
         if (!all.containsKey(tmplId)) {
             throw UNKNOWN_TEMPLATE.createWithContext(reader, tmplId.toString());
         }
@@ -198,14 +201,16 @@ public class TemplateSpecArgumentType implements ArgumentType<TemplateSpec> {
     }
 
     /** Suggest both template IDs (before the '[') and tags/values inside the brackets. */
-    public static SuggestionProvider<ServerCommandSource> suggestTemplatesAndTags() {
+    public static SuggestionProvider<ServerCommandSource> suggestTemplatesAndTags(MapObjectType type) {
         return (ctx, builder) -> {
+            Map<Identifier, MapObjectTemplate> all = (type == MapObjectType.NODE) ?  MapDataRegistry.getNodeTemplates() : MapDataRegistry.getWayTemplates();
+
             String full = builder.getRemaining();
             int bracketIdx = full.indexOf('[');
 
             // 1) before '[' → suggest template IDs
             if (bracketIdx < 0) {
-                for (Identifier id : MapDataRegistry.getMapObjectTemplates().keySet()) {
+                for (Identifier id : all.keySet()) {
                     String s = id.toString();
                     if (s.startsWith(full)) builder.suggest(s);
                 }
@@ -234,7 +239,7 @@ public class TemplateSpecArgumentType implements ArgumentType<TemplateSpec> {
                 Identifier tmplId = Identifier.tryParse(tmplPart);
                 MapObjectTemplate tmpl = tmplId == null
                         ? null
-                        : MapDataRegistry.getMapObjectTemplates().get(tmplId);
+                        : all.get(tmplId);
                 var globalTags = MapDataRegistry.getMapObjectTags();
 
                 if (tmpl != null) {

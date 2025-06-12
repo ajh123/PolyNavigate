@@ -86,13 +86,13 @@ public class MapDataRegistry {
 
     public static Map<Identifier, MapObjectTemplate> getWayTemplates() {
         return MAP_OBJECT_TEMPLATE_REGISTRY.entrySet().stream()
-                .filter(entry -> "way".equals(entry.getValue().type()))
+                .filter(entry -> MapObjectType.WAY.equals(entry.getValue().type()))
                 .collect(Collectors.toUnmodifiableMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
     public static Map<Identifier, MapObjectTemplate> getNodeTemplates() {
         return MAP_OBJECT_TEMPLATE_REGISTRY.entrySet().stream()
-                .filter(entry -> "node".equals(entry.getValue().type()))
+                .filter(entry -> MapObjectType.NODE.equals(entry.getValue().type()))
                 .collect(Collectors.toUnmodifiableMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 }
