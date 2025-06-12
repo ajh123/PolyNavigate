@@ -1,0 +1,17 @@
+{
+  "type": "way",
+  "tags": [
+    "poly_navigate:highway",
+    "poly_navigate:name"
+  ],
+  "optional_tags": [
+    "poly_navigate:lanes",
+    "poly_navigate:maxspeed",
+    "poly_navigate:surface",
+    "poly_navigate:width",
+    "poly_navigate:bridge",
+    "poly_navigate:tunnel",
+    "poly_navigate:oneway",
+    "poly_navigate:access"
+  ]
+}

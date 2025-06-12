@@ -1,0 +1,4 @@
+{
+  "description": "Is the road one-way",
+  "type": "boolean"
+}
