@@ -2,7 +2,7 @@
   "description": "Number of lanes",
   "osm_name": "lanes",
   "schema": {
-    "type": "integer",
+    "type": "int",
     "min": 1,
     "max": 10
   }

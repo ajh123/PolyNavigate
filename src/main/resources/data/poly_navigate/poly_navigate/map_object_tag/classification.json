@@ -2,7 +2,7 @@
   "description": "Type of road",
   "osm_name": "highway",
   "schema": {
-    "type": "string",
+    "type": "enum",
     "valid_values": [
       "residential",
       "primary",

@@ -6,10 +6,7 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
-import me.ajh123.poly_navigate.map_object.MapDataRegistry;
-import me.ajh123.poly_navigate.map_object.MapObjectTemplate;
-import me.ajh123.poly_navigate.map_object.MapObjectType;
-import me.ajh123.poly_navigate.map_object.TagDefinition;
+import me.ajh123.poly_navigate.map_object.*;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
@@ -45,7 +42,7 @@ public class TemplateSpecArgumentType implements ArgumentType<TemplateSpec> {
         MapObjectTemplate tmpl = all.get(tmplId);
 
         // 2) if next is '[', parse tag assignments
-        Map<Identifier, String> values = new LinkedHashMap<>();
+        List<Tag<?>> values = new ArrayList<>();
         if (reader.canRead() && reader.peek() == '[') {
             reader.skip(); // consume '['
             while (true) {
@@ -54,9 +51,9 @@ public class TemplateSpecArgumentType implements ArgumentType<TemplateSpec> {
                 Identifier tagId = Identifier.fromCommandInput(reader);
 
                 // must be allowed
-                boolean inTemplate = tmpl.tags().contains(tagId) || tmpl.optionalTags().contains(tagId);
+                boolean inTemplate = tmpl.requiredTags().contains(tagId) || tmpl.optionalTags().contains(tagId);
                 // ...and also actually registered in the global tag registry:
-                boolean registered  = MapDataRegistry.getMapObjectTags().containsKey(tagId);
+                boolean registered = MapDataRegistry.getMapObjectTags().containsKey(tagId);
 
                 if (!inTemplate || !registered) {
                     throw UNKNOWN_TAG.createWithContext(reader, tagId.toString());
@@ -69,119 +66,38 @@ public class TemplateSpecArgumentType implements ArgumentType<TemplateSpec> {
                 }
 
                 // parse value
-                Object parsedValue;
+                TagDefinition def = MapDataRegistry.getMapObjectTags().get(tagId);
+                TagValueSchema<?> schema = def.schema();
+
+                // read value token (quoted or unquoted)
+                String rawValue;
                 if (reader.canRead() && reader.peek() == '"') {
-                    // quoted string
-                    reader.skip();
-                    int valStart = reader.getCursor();
+                    reader.skip(); // opening quote
+                    int start = reader.getCursor();
                     while (reader.canRead() && reader.peek() != '"') {
                         reader.skip();
                     }
                     if (!reader.canRead()) {
-                        throw BAD_SYNTAX.createWithContext(reader, reader.getString().substring(valStart));
+                        throw BAD_SYNTAX.createWithContext(reader, reader.getString().substring(start));
                     }
-                    String raw = reader.getString().substring(valStart, reader.getCursor());
+                    rawValue = reader.getString().substring(start, reader.getCursor());
                     reader.skip(); // closing quote
-                    parsedValue = raw;
                 } else {
-                    // unquoted: read until ',' or ']'
-                    int valStart = reader.getCursor();
+                    int start = reader.getCursor();
                     while (reader.canRead() && reader.peek() != ',' && reader.peek() != ']') {
                         reader.skip();
                     }
-                    String raw = reader.getString().substring(valStart, reader.getCursor());
-                    // try bool
-                    if ("true".equalsIgnoreCase(raw) || "false".equalsIgnoreCase(raw)) {
-                        parsedValue = Boolean.parseBoolean(raw);
-                    }
-                    // try integer
-                    else if (raw.matches("-?\\d+")) {
-                        parsedValue = Integer.parseInt(raw);
-                    }
-                    // try float
-                    else if (raw.matches("-?\\d*\\.\\d+")) {
-                        parsedValue = Float.parseFloat(raw);
-                    }
-                    else {
-                        parsedValue = raw;
-                    }
+                    rawValue = reader.getString().substring(start, reader.getCursor());
                 }
 
-                // validate against TagDefinition
-                TagDefinition def = MapDataRegistry.getMapObjectTags().get(tagId);
-                TagDefinition.TagSchema schema = def.schema();
-                switch (schema.type()) {
-                    case "int" -> {
-                        if (!(parsedValue instanceof Integer)) {
-                            throw BAD_VALUE.createWithContext(reader, raw("expect int", parsedValue));
-                        }
-                        int i = (Integer)parsedValue;
-                        try {
-                            schema.min().ifPresent(min -> {
-                                if (i < min) try {
-                                    throw BAD_VALUE.create(min);
-                                } catch (CommandSyntaxException e) {
-                                    throw new RuntimeException(e);
-                                }
-                            });
-                            schema.max().ifPresent(max -> {
-                                if (i > max) try {
-                                    throw BAD_VALUE.create(max);
-                                } catch (CommandSyntaxException e) {
-                                    throw new RuntimeException(e);
-                                }
-                            });
-                        } catch (RuntimeException e) {
-                            try {
-                                throw e.getCause();
-                            } catch (Throwable ex) {
-                                throw new RuntimeException(ex);
-                            }
-                        }
-                    }
-                    case "float" -> {
-                        if (!(parsedValue instanceof Float)) {
-                            throw BAD_VALUE.createWithContext(reader, raw("expect float", parsedValue));
-                        }
-                        float i = (Float)parsedValue;
-                        try {
-                            schema.min().ifPresent(min -> {
-                                if (i < min) try {
-                                    throw BAD_VALUE.create(min);
-                                } catch (CommandSyntaxException e) {
-                                    throw new RuntimeException(e);
-                                }
-                            });
-                            schema.max().ifPresent(max -> {
-                                if (i > max) try {
-                                    throw BAD_VALUE.create(max);
-                                } catch (CommandSyntaxException e) {
-                                    throw new RuntimeException(e);
-                                }
-                            });
-                        } catch (RuntimeException e) {
-                            try {
-                                throw e.getCause();
-                            } catch (Throwable ex) {
-                                throw new RuntimeException(ex);
-                            }
-                        }
-                    }
-                    case "bool" -> {
-                        if (!(parsedValue instanceof Boolean)) {
-                            throw BAD_VALUE.createWithContext(reader, raw("expect bool", parsedValue));
-                        }
-                    }
-                    default -> {
-                        // string: optionally check validValues()
-                        if (!schema.validValues().isEmpty()
-                                && !schema.validValues().contains(parsedValue)) {
-                            throw BAD_VALUE.createWithContext(reader, raw("expect one of " + schema.validValues(), parsedValue));
-                        }
-                    }
+                Object parsedValue;
+                try {
+                    parsedValue = schema.parse(rawValue);
+                } catch (CommandSyntaxException e) {
+                    throw BAD_VALUE.createWithContext(reader, e.getMessage());
                 }
 
-                values.put(tagId, String.valueOf(parsedValue));
+                values.add(schema.createTag(tagId, parsedValue, def));
 
                 // if comma, continue; if ']', break
                 if (reader.canRead() && reader.peek() == ',') {
@@ -197,17 +113,13 @@ public class TemplateSpecArgumentType implements ArgumentType<TemplateSpec> {
         }
 
         // 3) ensure all required tags are present
-        for (Identifier requiredTag : tmpl.tags()) {
-            if (!values.containsKey(requiredTag)) {
+        for (Identifier requiredTag : tmpl.requiredTags()) {
+            if (values.stream().noneMatch(tag -> tag.identifier().equals(requiredTag))) {
                 throw MISSING_REQUIRED_TAG.createWithContext(reader, requiredTag.toString());
             }
         }
 
         return new TemplateSpec(tmplId, values);
-    }
-
-    private static String raw(String expect, Object got) {
-        return expect + ", got " + got;
     }
 
     /** Suggest both template IDs (before the '[') and tags/values inside the brackets. */
@@ -253,7 +165,7 @@ public class TemplateSpecArgumentType implements ArgumentType<TemplateSpec> {
                 var globalTags = MapDataRegistry.getMapObjectTags();
 
                 if (tmpl != null) {
-                    for (Identifier tagId : tmpl.tags()) {
+                    for (Identifier tagId : tmpl.requiredTags()) {
                         if (!globalTags.containsKey(tagId)) continue;
                         String token = tagId + "=";
                         if (!insideAll.contains(token)) keyBuilder.suggest(token);
@@ -280,20 +192,21 @@ public class TemplateSpecArgumentType implements ArgumentType<TemplateSpec> {
                     : MapDataRegistry.getMapObjectTags().get(tagId);
 
             if (def != null) {
-                TagDefinition.TagSchema schema = def.schema();
-                // Suggest matching values normally (replace prefix)
-                for (String v : schema.validValues()) {
-                    if (prefix.isEmpty() || v.startsWith(prefix)) {
-                        valueBuilder.suggest(v);
-                    }
+                TagValueSchema<?> schema = def.schema();
+                List<String> suggestions = schema.suggest(prefix);
+                for (String s : suggestions) {
+                    valueBuilder.suggest(s);
                 }
 
-                // If exact match on a value, suggest separators
-                if (schema.validValues().contains(prefix)) {
-                    // Use a builder offset at the *end* of the current input for separators,
-                    // so the separator inserts after the value instead of replacing it.
+                // Suggest separators if the value looks complete
+                if (prefix.startsWith("\"") && prefix.endsWith("\"") && prefix.length() > 1) {
                     SuggestionsBuilder sepBuilder = builder.createOffset(builder.getStart() + builder.getRemaining().length());
-
+                    sepBuilder.suggest(",");
+                    sepBuilder.suggest("]");
+                    return sepBuilder.buildFuture();
+                } else if (!suggestions.isEmpty() && suggestions.contains(prefix)) {
+                    // Unquoted suggestions (like "true", "123", etc.) → also suggest end tokens
+                    SuggestionsBuilder sepBuilder = builder.createOffset(builder.getStart() + builder.getRemaining().length());
                     sepBuilder.suggest(",");
                     sepBuilder.suggest("]");
                     return sepBuilder.buildFuture();

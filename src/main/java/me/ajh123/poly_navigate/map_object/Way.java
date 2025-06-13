@@ -1,15 +1,13 @@
 package me.ajh123.poly_navigate.map_object;
 
-import net.minecraft.util.Identifier;
+import java.util.List;
 
-import java.util.Map;
-
-public record Way(long id, Map<Identifier, String> tags) {
+public record Way(long id, List<Tag<?>> tags) {
     public Way(long id) {
-        this(id, Map.of());
+        this(id, List.of());
     }
 
-    public Way(long id, Map<Identifier, String> tags) {
+    public Way(long id, List<Tag<?>> tags) {
         this.id = id;
         this.tags = tags;
     }
