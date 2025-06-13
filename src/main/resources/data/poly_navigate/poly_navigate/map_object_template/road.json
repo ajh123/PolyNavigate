@@ -1,7 +1,7 @@
 {
   "type": "way",
-  "tags": [
-    "poly_navigate:highway",
+  "required_tags": [
+    "poly_navigate:classification",
     "poly_navigate:name"
   ],
   "optional_tags": [

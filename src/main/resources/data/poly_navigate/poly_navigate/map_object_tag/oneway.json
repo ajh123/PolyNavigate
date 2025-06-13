@@ -1,4 +1,7 @@
 {
   "description": "Is the road one-way",
-  "type": "boolean"
+  "osm_name": "oneway",
+  "schema": {
+    "type": "boolean"
+  }
 }

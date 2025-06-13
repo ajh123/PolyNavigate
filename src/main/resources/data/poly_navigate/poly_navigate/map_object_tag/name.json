@@ -1,4 +1,7 @@
 {
   "description": "Name of the object",
-  "type": "string"
+  "osm_name": "name",
+  "schema": {
+    "type": "string"
+  }
 }

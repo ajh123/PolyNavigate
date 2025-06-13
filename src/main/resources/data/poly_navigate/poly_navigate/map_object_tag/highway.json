@@ -1,5 +1,0 @@
-{
-  "description": "Type of road",
-  "type": "string",
-  "valid_values": ["residential", "primary", "secondary", "tertiary", "service", "unclassified"]
-}

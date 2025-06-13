@@ -10,32 +10,14 @@ import java.util.Objects;
 
 public record MapObjectTemplate(
     MapObjectType type,
-    List<Identifier> tags,
+    List<Identifier> requiredTags,
     List<Identifier> optionalTags
 ) {
     public static final Codec<MapObjectTemplate> CODEC = RecordCodecBuilder.create(instance ->
         instance.group(
             MapObjectType.CODEC.fieldOf("type").forGetter(MapObjectTemplate::type),
-            Codec.list(Identifier.CODEC).fieldOf("tags").forGetter(MapObjectTemplate::tags),
+            Codec.list(Identifier.CODEC).fieldOf("required_tags").forGetter(MapObjectTemplate::requiredTags),
             Codec.list(Identifier.CODEC).optionalFieldOf("optional_tags", List.of()).forGetter(MapObjectTemplate::optionalTags)
         ).apply(instance, MapObjectTemplate::new)
     );
-
-    public List<TagDefinition> getTags() {
-        Map<Identifier, TagDefinition> allTags = MapDataRegistry.getMapObjectTags();
-
-        return tags.stream()
-                .map(allTags::get)
-                .filter(Objects::nonNull)
-                .toList();
-    }
-
-    public List<TagDefinition> getOptionalTags() {
-        Map<Identifier, TagDefinition> allTags = MapDataRegistry.getMapObjectTags();
-
-        return optionalTags.stream()
-                .map(allTags::get)
-                .filter(Objects::nonNull)
-                .toList();
-    }
 }

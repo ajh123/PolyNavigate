@@ -109,21 +109,22 @@ public class TemplateSpecArgumentType implements ArgumentType<TemplateSpec> {
 
                 // validate against TagDefinition
                 TagDefinition def = MapDataRegistry.getMapObjectTags().get(tagId);
-                switch (def.type()) {
+                TagDefinition.TagSchema schema = def.schema();
+                switch (schema.type()) {
                     case "int" -> {
                         if (!(parsedValue instanceof Integer)) {
                             throw BAD_VALUE.createWithContext(reader, raw("expect int", parsedValue));
                         }
                         int i = (Integer)parsedValue;
                         try {
-                            def.min().ifPresent(min -> {
+                            schema.min().ifPresent(min -> {
                                 if (i < min) try {
                                     throw BAD_VALUE.create(min);
                                 } catch (CommandSyntaxException e) {
                                     throw new RuntimeException(e);
                                 }
                             });
-                            def.max().ifPresent(max -> {
+                            schema.max().ifPresent(max -> {
                                 if (i > max) try {
                                     throw BAD_VALUE.create(max);
                                 } catch (CommandSyntaxException e) {
@@ -144,14 +145,14 @@ public class TemplateSpecArgumentType implements ArgumentType<TemplateSpec> {
                         }
                         float i = (Float)parsedValue;
                         try {
-                            def.min().ifPresent(min -> {
+                            schema.min().ifPresent(min -> {
                                 if (i < min) try {
                                     throw BAD_VALUE.create(min);
                                 } catch (CommandSyntaxException e) {
                                     throw new RuntimeException(e);
                                 }
                             });
-                            def.max().ifPresent(max -> {
+                            schema.max().ifPresent(max -> {
                                 if (i > max) try {
                                     throw BAD_VALUE.create(max);
                                 } catch (CommandSyntaxException e) {
@@ -173,9 +174,9 @@ public class TemplateSpecArgumentType implements ArgumentType<TemplateSpec> {
                     }
                     default -> {
                         // string: optionally check validValues()
-                        if (!def.validValues().isEmpty()
-                                && !def.validValues().contains(parsedValue)) {
-                            throw BAD_VALUE.createWithContext(reader, raw("expect one of " + def.validValues(), parsedValue));
+                        if (!schema.validValues().isEmpty()
+                                && !schema.validValues().contains(parsedValue)) {
+                            throw BAD_VALUE.createWithContext(reader, raw("expect one of " + schema.validValues(), parsedValue));
                         }
                     }
                 }
@@ -279,15 +280,16 @@ public class TemplateSpecArgumentType implements ArgumentType<TemplateSpec> {
                     : MapDataRegistry.getMapObjectTags().get(tagId);
 
             if (def != null) {
+                TagDefinition.TagSchema schema = def.schema();
                 // Suggest matching values normally (replace prefix)
-                for (String v : def.validValues()) {
+                for (String v : schema.validValues()) {
                     if (prefix.isEmpty() || v.startsWith(prefix)) {
                         valueBuilder.suggest(v);
                     }
                 }
 
                 // If exact match on a value, suggest separators
-                if (def.validValues().contains(prefix)) {
+                if (schema.validValues().contains(prefix)) {
                     // Use a builder offset at the *end* of the current input for separators,
                     // so the separator inserts after the value instead of replacing it.
                     SuggestionsBuilder sepBuilder = builder.createOffset(builder.getStart() + builder.getRemaining().length());
