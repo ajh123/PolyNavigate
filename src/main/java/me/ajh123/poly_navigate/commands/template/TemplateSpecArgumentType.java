@@ -25,6 +25,8 @@ public class TemplateSpecArgumentType implements ArgumentType<TemplateSpec> {
             new DynamicCommandExceptionType(tag -> Text.literal("Unknown tag: " + tag));
     private static final DynamicCommandExceptionType BAD_VALUE =
             new DynamicCommandExceptionType(msg -> Text.literal("Invalid value: " + msg));
+    private static final DynamicCommandExceptionType MISSING_REQUIRED_TAG =
+            new DynamicCommandExceptionType(tag -> Text.literal("Missing required tag: " + tag));
 
     private final MapObjectType type;
 
@@ -190,6 +192,13 @@ public class TemplateSpecArgumentType implements ArgumentType<TemplateSpec> {
                     break;
                 }
                 throw BAD_SYNTAX.createWithContext(reader, reader.getRemaining());
+            }
+        }
+
+        // 3) ensure all required tags are present
+        for (Identifier requiredTag : tmpl.tags()) {
+            if (!values.containsKey(requiredTag)) {
+                throw MISSING_REQUIRED_TAG.createWithContext(reader, requiredTag.toString());
             }
         }
 
