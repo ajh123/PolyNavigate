@@ -26,4 +26,20 @@ public class GraphManager {
     public static Graph getGraph(Identifier dimension) {
         return graphRegistry.get(dimension);
     }
+
+    public static int getNodeCount(Identifier dimension) {
+        Graph graph = getGraph(dimension);
+        if (graph != null) {
+            return graph.getNodeCount();
+        }
+        return 0;
+    }
+
+    public static int getWayCount(Identifier dimension) {
+        Graph graph = getGraph(dimension);
+        if (graph != null) {
+            return graph.getWayCount();
+        }
+        return 0;
+    }
 }

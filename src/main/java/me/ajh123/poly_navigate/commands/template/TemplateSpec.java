@@ -5,5 +5,5 @@ import java.util.Map;
 
 public record TemplateSpec(
         Identifier templateId,
-        Map<Identifier, Object> tagValues
+        Map<Identifier, String> tagValues
 ) {}

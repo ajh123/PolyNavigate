@@ -43,7 +43,7 @@ public class TemplateSpecArgumentType implements ArgumentType<TemplateSpec> {
         MapObjectTemplate tmpl = all.get(tmplId);
 
         // 2) if next is '[', parse tag assignments
-        Map<Identifier, Object> values = new LinkedHashMap<>();
+        Map<Identifier, String> values = new LinkedHashMap<>();
         if (reader.canRead() && reader.peek() == '[') {
             reader.skip(); // consume '['
             while (true) {
@@ -178,7 +178,7 @@ public class TemplateSpecArgumentType implements ArgumentType<TemplateSpec> {
                     }
                 }
 
-                values.put(tagId, parsedValue);
+                values.put(tagId, String.valueOf(parsedValue));
 
                 // if comma, continue; if ']', break
                 if (reader.canRead() && reader.peek() == ',') {

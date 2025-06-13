@@ -23,8 +23,26 @@ public class Graph {
         graph.addVertex(node);
     }
 
+    public Node getNode(int id) {
+        for (Node node : graph.vertexSet()) {
+            if (node.id() == id) {
+                return node;
+            }
+        }
+        return null;
+    }
+
     public void addWay(Way way, Node source, Node target) {
         graph.addEdge(source, target, way);
+    }
+
+    public Way getWay(int id) {
+        for (Way way : graph.edgeSet()) {
+            if (way.id() == id) {
+                return way;
+            }
+        }
+        return null;
     }
 
     public void removeNode(Node node) {
